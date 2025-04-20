@@ -1,0 +1,13 @@
+:root {
+  --primary-color: #409eff;
+  --background-color: #f5f7fa;
+  --text-color: #303133;
+  --border-color: #dcdfe6;
+}
+
+body.theme-blue {
+  --primary-color: #409eff;
+  --background-color: #f5f7fa;
+  --text-color: #303133;
+  --border-color: #dcdfe6;
+}
