@@ -16,6 +16,10 @@
         <result property="postcode" column="postcode"/>
         <result property="avatar" column="avatar"/>
         <result property="createdAt" column="created_at"/>
+        <!-- 省市区 -->
+        <result property="province" column="province"/>
+        <result property="city" column="city"/>
+        <result property="district" column="district"/>
     </resultMap>
 
     <!-- 查询所有 -->
@@ -30,8 +34,31 @@
 
     <!-- 新增用户 -->
     <insert id="insert" parameterType="com.example.exp2.entity.User" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO users (username, email, password, birthdate, address, postcode, avatar, created_at)
-        VALUES (#{username}, #{email}, #{password}, #{birthdate}, #{address}, #{postcode}, #{avatar}, NOW())
+        INSERT INTO users (
+            username, 
+            email, 
+            password, 
+            birthdate, 
+            address, 
+            postcode, 
+            avatar, 
+            province,
+            city,
+            district,
+            created_at
+        ) VALUES (
+            #{username}, 
+            #{email}, 
+            #{password}, 
+            #{birthdate}, 
+            #{address}, 
+            #{postcode}, 
+            #{avatar}, 
+            #{province},
+            #{city},
+            #{district},
+            NOW()
+        )
     </insert>
 
     <!-- 更新用户 -->
@@ -43,7 +70,10 @@
             birthdate = #{birthdate},
             address = #{address},
             postcode = #{postcode},
-            avatar = #{avatar}
+            avatar = #{avatar},
+            province = #{province},
+            city = #{city},
+            district = #{district}
         WHERE id = #{id}
     </update>
 

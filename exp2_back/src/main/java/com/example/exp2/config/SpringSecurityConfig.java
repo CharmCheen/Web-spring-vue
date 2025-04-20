@@ -2,7 +2,6 @@ package com.example.exp2.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -31,9 +30,7 @@ public class SpringSecurityConfig {
                 .requestMatchers("/api/user/register", "/api/user/login").permitAll()
                 .requestMatchers("/api/**").authenticated()
                 .anyRequest().permitAll()
-            )
-            .httpBasic(Customizer.withDefaults());
-        
+            ); // 移除 httpBasic
         return http.build();
     }
 

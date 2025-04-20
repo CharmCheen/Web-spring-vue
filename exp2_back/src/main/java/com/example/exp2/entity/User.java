@@ -14,4 +14,9 @@ public class User {
     private String postcode;
     private String avatar;
     private LocalDateTime createdAt; // 映射为 LocalDateTime
+    
+    // 省市区（使用字段存储省市区名称）
+    private String province;
+    private String city;
+    private String district;
 }

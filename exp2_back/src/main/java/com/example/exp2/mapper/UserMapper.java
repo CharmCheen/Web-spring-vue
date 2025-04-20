@@ -24,10 +24,10 @@ public interface UserMapper {
     @Select("SELECT * FROM users WHERE email = #{email}")
     User findByEmail(String email);  // 根据邮箱查询用户
 
-    @Insert("INSERT INTO users (username, email, birthdate, address, postcode, password, avatar) VALUES (#{username}, #{email}, #{birthdate}, #{address}, #{postcode}, #{password}, #{avatar})")
+    @Insert("INSERT INTO users (username, email, birthdate, address, postcode, password, avatar, province, city, district) VALUES (#{username}, #{email}, #{birthdate}, #{address}, #{postcode}, #{password}, #{avatar}, #{province}, #{city}, #{district})")
     void insert(User user);  // 插入用户
 
-    @Update("UPDATE users SET username = #{username}, email = #{email}, birthdate = #{birthdate}, address = #{address}, postcode = #{postcode}, password = #{password}, avatar = #{avatar} WHERE id = #{id}")
+    @Update("UPDATE users SET username = #{username}, email = #{email}, birthdate = #{birthdate}, address = #{address}, postcode = #{postcode}, password = #{password}, avatar = #{avatar}, province = #{province}, city = #{city}, district = #{district} WHERE id = #{id}")
     void update(User user);  // 更新用户信息
 
     @Delete("DELETE FROM users WHERE id = #{id}")

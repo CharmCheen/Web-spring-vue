@@ -83,6 +83,7 @@
                   placeholder="请选择省市区"
                   clearable
                   style="width: 100%"
+                  @change="handleAreaChange"
                 />
               </el-form-item>
 
@@ -161,7 +162,7 @@
 
 <script>
 import axios from 'axios'
-import { regionData } from 'element-china-area-data'
+import { regionData, codeToText } from 'element-china-area-data'
 
 export default {
   name: 'RegisterPage',
@@ -207,7 +208,10 @@ export default {
         postcode: '',
         password: '',
         confirmPassword: '',
-        avatar: ''
+        avatar: '',
+        provinceName: '',
+        cityName: '',
+        districtName: ''
       },
       rules: {
         username: [
@@ -231,18 +235,27 @@ export default {
   },
 
   methods: {
-    // 压缩图片
+    handleAreaChange(selectedValues) {
+      if (selectedValues && selectedValues.length > 0) {
+        this.registerForm.provinceName = selectedValues[0] ? codeToText[selectedValues[0]] : ''
+        this.registerForm.cityName = selectedValues[1] ? codeToText[selectedValues[1]] : ''
+        this.registerForm.districtName = selectedValues[2] ? codeToText[selectedValues[2]] : ''
+      } else {
+        this.registerForm.provinceName = ''
+        this.registerForm.cityName = ''
+        this.registerForm.districtName = ''
+      }
+    },
+
     compressImage(file) {
       return new Promise((resolve) => {
         const reader = new FileReader();
         reader.onload = (e) => {
           const img = new Image();
           img.onload = () => {
-            // 创建 canvas
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
 
-            // 计算压缩后的尺寸，最大宽度为 200px
             let width = img.width;
             let height = img.height;
             const maxWidth = 200;
@@ -252,17 +265,13 @@ export default {
               width = maxWidth;
             }
 
-            // 设置 canvas 尺寸
             canvas.width = width;
             canvas.height = height;
 
-            // 绘制图片
             ctx.drawImage(img, 0, 0, width, height);
 
-            // 转换为 base64，使用 0.8 的质量压缩
             const base64 = canvas.toDataURL('image/jpeg', 0.8);
             
-            // 检查大小是否超过 1MB
             const base64Size = Math.round((base64.length * 3) / 4);
             if (base64Size > 1024 * 1024) {
               this.$message.error('图片大小不能超过1MB，请选择更小的图片');
@@ -279,7 +288,6 @@ export default {
     },
 
     async handleAvatarChange(file) {
-      // 验证文件类型
       const isImage = file.raw.type.startsWith('image/');
       const isLt2M = file.raw.size / 1024 / 1024 < 2;
 
@@ -293,7 +301,6 @@ export default {
       }
 
       try {
-        // 压缩图片
         const compressedImage = await this.compressImage(file.raw);
         if (compressedImage) {
           this.registerForm.avatar = compressedImage;
@@ -314,21 +321,20 @@ export default {
           password: this.registerForm.password,
           email: this.registerForm.email || null,
           birthdate: this.registerForm.birthdate ? new Date(this.registerForm.birthdate).toISOString().split('T')[0] : null,
-          province: this.registerForm.region[0] || null,
-          city: this.registerForm.region[1] || null,
-          district: this.registerForm.region[2] || null,
+          province: this.registerForm.provinceName || null,
+          city: this.registerForm.cityName || null,
+          district: this.registerForm.districtName || null,
           address: this.registerForm.address || null,
           postcode: this.registerForm.postcode || null,
           avatar: this.registerForm.avatar || null
         }
 
-        // 调用后端注册接口
         axios
           .post('/api/user/register', payload)
           .then(() => {
             this.loading = false
             this.$message.success('注册成功！')
-            this.$router.push('/login')
+            this.$router.push('/')
           })
           .catch(err => {
             this.loading = false
@@ -358,7 +364,7 @@ export default {
     },
 
     goToLogin() {
-      this.$router.push('/login')
+      this.$router.push('/')
     }
   }
 }
