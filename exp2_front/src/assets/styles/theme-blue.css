@@ -1,13 +1,36 @@
-:root {
-  --primary-color: #409eff;
-  --background-color: #f5f7fa;
-  --text-color: #303133;
-  --border-color: #dcdfe6;
-}
-
 body.theme-blue {
-  --primary-color: #409eff;
-  --background-color: #f5f7fa;
-  --text-color: #303133;
-  --border-color: #dcdfe6;
+  /* 主色调 */
+  --primary-color: #1890ff;
+  --primary-color-light: #40a9ff;
+  --primary-color-lighter: #69c0ff;
+  --primary-color-dark: #096dd9;
+  --primary-color-darker: #0050b3;
+  
+  /* 背景颜色 */
+  --bg-color: #f0f2f5;
+  --card-bg: #ffffff;
+  
+  /* 文本颜色 */
+  --text-color: #262626;
+  --text-color-secondary: #595959;
+  --text-color-light: #8c8c8c;
+  
+  /* 边框颜色 */
+  --border-color: #e8e8e8;
+  --border-color-light: #f0f0f0;
+  
+  /* 侧边栏颜色 - 优化 */
+  --sidebar-bg: linear-gradient(135deg, #1d3b5f 0%, #001529 100%); /* 调整渐变 */
+  --sidebar-text: #b0bac4; /* 调整文字颜色 */
+  --sidebar-active-text: #ffffff; /* 保持激活文字颜色 */
+  --sidebar-active-bg: #1890ff; /* 保持激活背景 */
+  --sidebar-hover-bg: rgba(24, 144, 255, 0.2); /* 保持悬停背景 */
+  
+  /* 其他颜色变量 */
+  --success-color: #52c41a;
+  --warning-color: #faad14;
+  --error-color: #f5222d;
+  --link-color: #1890ff;
+  --disabled-color: rgba(0, 0, 0, 0.25);
+  --shadow-color: rgba(0, 0, 0, 0.05);
 }

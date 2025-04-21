@@ -1,64 +1,83 @@
 <template>
-  <div id="app" :class="themeClass">
-    <router-view />
+  <div class="app-container">
+    <el-container>
+      <el-aside v-if="showSidebar" width="220px">
+        <SidebarMenu />
+      </el-aside>
+      <el-container>
+        <el-main>
+          <router-view />
+        </el-main>
+      </el-container>
+    </el-container>
   </div>
 </template>
 
-<script>
-export default {
-  name: 'App',
-  data() {
-    return {
-      currentTheme: 'blue' // or 'yellow'
-    }
-  },
-  computed: {
-    themeClass() {
-      return `theme-${this.currentTheme}`
-    }
-  },
-  provide() {
-    return {
-      switchTheme: this.switchTheme,
-      themeState: this
-    }
-  },
-  methods: {
-    switchTheme(themeName) {
-      this.currentTheme = themeName
-    }
-  }
+<script setup>
+import { computed, provide, ref, watch } from 'vue' // 确保导入了 computed
+import { useRoute } from 'vue-router' // 确保导入了 useRoute
+import SidebarMenu from './components/SidebarMenu.vue'
+
+const route = useRoute() // 重新定义 route
+
+// 重新定义 showSidebar 计算属性
+const showSidebar = computed(() => {
+  const noSidebarRoutes = ['Login', 'Register', 'ForgotPassword']
+  // route.name 可能为 null 或 undefined，需要检查
+  return route.name ? !noSidebarRoutes.includes(route.name.toString()) : true
+})
+
+// --- 主题切换逻辑 (保持不变) ---
+const currentTheme = ref(localStorage.getItem('theme') || 'blue')
+
+const switchTheme = (themeName) => {
+  currentTheme.value = themeName
+  localStorage.setItem('theme', themeName)
 }
+
+provide('switchTheme', switchTheme)
+
+watch(currentTheme, (newTheme, oldTheme) => {
+  if (oldTheme) {
+    document.body.classList.remove(`theme-${oldTheme}`)
+  }
+  document.body.classList.add(`theme-${newTheme}`)
+}, { immediate: true })
+// --- 主题切换逻辑结束 ---
 </script>
 
 <style>
-.theme-blue {
-  --primary-color: #007aff;
-  --topbar-bg: #0055a4;
-  --sidebar-bg: #d6e8fd;
-  --bg-color: #f0f6fd;
-  --text-color: #1c1c1e;
-  --card-bg: #ffffff;
-  --border-color: #c4d8ec;
-  --glow-color: #007aff88;
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-.theme-yellow {
-  --primary-color: #d89614;
-  --topbar-bg: #b37a2f;
-  --sidebar-bg: #e8d9b1;
-  --bg-color: #fcf6e8;
-  --text-color: #2f2f1e;
-  --card-bg: #ffffff;
-  --border-color: #e2d2aa;
-  --glow-color: #d8961488;
-}
-
-#app {
-  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-color);
+.app-container {
   min-height: 100vh;
-  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.el-container {
+  min-height: 100vh;
+}
+
+.el-aside {
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  transition: width 0.3s;
+  width: 220px !important;
+}
+
+.el-main {
+  background-color: #f5f7fa;
+  padding: 0;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .el-aside {
+    width: 64px !important;
+  }
 }
 </style>

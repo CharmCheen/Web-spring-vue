@@ -6,48 +6,112 @@ import Home from '../pages/Home.vue';
 import UserManagement from '../pages/UserManagement.vue';
 import FeatureUserManagement from '../pages/FeatureUserManagement.vue';
 import FileManagement from '../pages/FileManagement.vue';
+import ArticleCreate from '../components/ArticleCreate.vue';
+import ArticleManage from '../components/ArticleManage.vue';
+import ArticleEdit from '../components/ArticleEdit.vue';
+import ArticleFeed from '../components/ArticleFeed.vue';
+import SubscriptionList from '../components/SubscriptionList.vue';
 
 const routes = [
   {
     path: '/',
+    redirect: '/login'  // 默认重定向到登录页
+  },
+  {
+    path: '/login',
     name: 'Login',
-    component: Login
+    component: Login,
+    meta: { requiresAuth: false }  // 明确标记不需要登录
   },
   {
     path: '/register',
     name: 'Register',
-    component: Register
+    component: Register,
+    meta: { requiresAuth: false }
   },
   {
     path: '/forgot-password',
     name: 'ForgotPassword',
-    component: ForgotPassword
+    component: ForgotPassword,
+    meta: { requiresAuth: false }
   },
   {
     path: '/home',
     name: 'Home',
-    component: Home
+    component: Home,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/feed',
+    name: 'ArticleFeed',
+    component: ArticleFeed,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/articles/create',
+    name: 'ArticleCreate',
+    component: ArticleCreate,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/articles/manage',
+    name: 'ArticleManage',
+    component: ArticleManage,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/articles/edit/:id',
+    name: 'ArticleEdit',
+    component: ArticleEdit,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/subscriptions',
+    name: 'SubscriptionList',
+    component: SubscriptionList,
+    meta: { requiresAuth: true }
   },
   {
     path: '/users',
     name: 'UserManagement',
-    component: UserManagement
+    component: UserManagement,
+    meta: { requiresAuth: true }
   },
   {
     path: '/feature/users',
     name: 'FeatureUserManagement',
-    component: FeatureUserManagement
+    component: FeatureUserManagement,
+    meta: { requiresAuth: true }
   },
   {
     path: '/feature/files',
     name: 'FileManagement',
-    component: FileManagement
+    component: FileManagement,
+    meta: { requiresAuth: true }
   }
 ];
 
 const router = createRouter({
   history: createWebHistory(),
   routes
+});
+
+// 全局导航守卫
+router.beforeEach((to, from, next) => {
+  const username = localStorage.getItem('username');
+  
+  // 如果用户未登录且尝试访问需要认证的页面
+  if (!username && to.meta.requiresAuth) {
+    next('/login');
+  } 
+  // 如果用户已登录且尝试访问登录页面
+  else if (username && to.path === '/login') {
+    next('/home');
+  } 
+  // 其他情况正常放行
+  else {
+    next();
+  }
 });
 
 export default router;

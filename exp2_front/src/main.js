@@ -6,6 +6,17 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import axios from 'axios'
 
+// 导入主题样式文件
+import './assets/styles/theme-base.css'
+import './assets/styles/theme-blue.css'
+import './assets/styles/theme-yellow.css'
+import './assets/styles/global.css'
+
+// 清除所有登录状态
+localStorage.removeItem('user')
+localStorage.removeItem('username')
+localStorage.removeItem('token')
+
 // —— Axios 全局配置 ——
 // 1. 基准地址
 axios.defaults.baseURL = 'http://localhost:8081'
@@ -57,6 +68,21 @@ const app = createApp(App)
 
 // 可在组件里用 this.$axios 发请求
 app.config.globalProperties.$axios = axios
+
+// 设置默认主题
+const storedTheme = localStorage.getItem('theme') || 'blue'
+document.body.className = `theme-${storedTheme}`
+
+// 全局主题状态和切换方法
+app.provide('themeState', { currentTheme: storedTheme })
+app.provide('switchTheme', (theme) => {
+  // 移除所有主题类
+  document.body.classList.remove('theme-blue', 'theme-yellow')
+  // 添加新主题类
+  document.body.classList.add(`theme-${theme}`)
+  // 保存到本地存储
+  localStorage.setItem('theme', theme)
+})
 
 app.use(router)
 app.use(ElementPlus)

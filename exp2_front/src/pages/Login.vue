@@ -90,6 +90,7 @@
 
 <script>
 import axios from 'axios'
+import { ElMessage } from 'element-plus'
 export default {
   name: 'LoginPage',
   data() {
@@ -113,39 +114,78 @@ export default {
   },
   methods: {
     submitForm() {
-      this.$refs.loginForm.validate((valid) => {
+      this.$refs.loginForm.validate(async (valid) => {
         if (valid) {
-          this.loading = true
-          axios.post('/api/user/login', {
-            account: this.loginForm.account,
-            password: this.loginForm.password
-          })
-          .then(response => {
-            this.loading = false
+          this.loading = true;
+          try {
+            const response = await axios.post('/api/user/login', this.loginForm);
+            
+            // 存储用户信息 - 直接使用响应数据
+            localStorage.setItem('user', JSON.stringify(response.data));
+            localStorage.setItem('username', response.data.username);
+            
             // 处理头像URL
-            const userData = response.data;
-            if (userData.avatar) {
-              // 如果是默认头像
-              if (userData.avatar === 'default.jpg') {
-                userData.avatarUrl = '/uploads/avatars/default.jpg';
-              } else {
-                // 如果是用户上传的头像
-                userData.avatarUrl = `/uploads/avatars/${userData.avatar}`;
-              }
+            if (response.data.avatar && response.data.avatar !== 'default.jpg') {
+              this.userAvatar = `http://localhost:8081/uploads/avatars/${response.data.avatar}`;
+            } else {
+              this.userAvatar = 'http://localhost:8081/uploads/avatars/default.jpg';
             }
-            // 存储用户信息
-            localStorage.setItem('user', JSON.stringify(userData))
-            this.$message.success('登录成功！')
-            // 登录成功后跳转到主页
-            this.$router.push('/home')
-          })
-          .catch(err => {
-            this.loading = false
-            let errorMessage = err.response?.data || '登录失败，请重试'
-            this.$message.error(errorMessage)
-          })
+            
+            ElMessage.success('登录成功');
+            // 重定向到首页
+            this.$router.push('/home');
+          } catch (error) {
+            console.error('登录错误:', error);
+            
+            // 改进错误处理逻辑，处理各种可能的错误响应格式
+            let errorMessage = '登录失败';
+            
+            if (error.response) {
+              // 详细解析错误响应
+              const responseData = error.response.data;
+              
+              if (typeof responseData === 'string') {
+                // 如果响应是字符串，直接使用
+                errorMessage = responseData;
+              } else if (responseData && responseData.message) {
+                // 如果响应中有message字段
+                errorMessage = responseData.message;
+              } else if (responseData && typeof responseData === 'object') {
+                // 尝试找到对象中的任何可能的错误信息
+                const firstValue = Object.values(responseData)[0];
+                if (firstValue && typeof firstValue === 'string') {
+                  errorMessage = firstValue;
+                }
+              }
+              
+              // 如果没有具体信息，根据状态码给出提示
+              if (errorMessage === '登录失败') {
+                switch (error.response.status) {
+                  case 400:
+                    errorMessage = '登录失败：请求参数错误';
+                    break;
+                  case 401:
+                    errorMessage = '登录失败：用户名或密码错误';
+                    break;
+                  case 403:
+                    errorMessage = '登录失败：账号无访问权限';
+                    break;
+                  case 500:
+                    errorMessage = '登录失败：服务器内部错误';
+                    break;
+                }
+              }
+            } else if (error.request) {
+              // 请求已发送但未收到响应
+              errorMessage = '登录失败：服务器无响应，请检查网络连接';
+            }
+            
+            ElMessage.error(errorMessage);
+          } finally {
+            this.loading = false;
+          }
         }
-      })
+      });
     },
     // 当输入账号时尝试获取头像
     async handleAccountInput() {

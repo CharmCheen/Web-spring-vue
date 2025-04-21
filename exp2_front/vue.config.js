@@ -4,9 +4,7 @@ module.exports = {
       '/api': {
         target: 'http://localhost:8081', // Spring Boot 后端端口
         changeOrigin: true,
-        pathRewrite: {
-          '^/api': ''
-        }
+        // 删除 pathRewrite，保留 '/api' 前缀
       }
     }
   },

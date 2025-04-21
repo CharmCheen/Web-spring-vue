@@ -28,8 +28,7 @@ public class SpringSecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/user/register", "/api/user/login").permitAll()
-                .requestMatchers("/api/**").authenticated()
-                .anyRequest().permitAll()
+                .anyRequest().permitAll() // 所有请求都允许匿名访问
             ); // 移除 httpBasic
         return http.build();
     }

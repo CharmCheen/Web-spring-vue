@@ -1,6 +1,5 @@
 <template>
   <div class="home-layout">
-    <Sidebar />
     <div class="main-content">
       <AppHeader />
       <div class="home-content">
@@ -26,13 +25,11 @@
 </template>
 
 <script>
-import Sidebar from '../components/SidebarMenu.vue'
 import AppHeader from '../components/AppHeader.vue'
 
 export default {
   name: 'HomePage',
   components: {
-    Sidebar,
     AppHeader
   },
   data() {

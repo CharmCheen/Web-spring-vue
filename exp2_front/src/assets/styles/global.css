@@ -36,7 +36,8 @@
   box-shadow: 0 0 0 2px var(--glow-color);
 }
 
-/* === 覆盖 Element Plus 子菜单样式 === */
+/* === 移除或注释掉 Element Plus 子菜单样式的强制覆盖 === */
+/*
 .el-sub-menu__title {
   background-color: var(--sidebar-bg) !important;
   color: var(--text-color) !important;
@@ -59,3 +60,4 @@
   background-color: var(--primary-color) !important;
   color: var(--bg-color) !important;
 }
+*/
