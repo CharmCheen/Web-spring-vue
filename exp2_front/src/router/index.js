@@ -108,7 +108,6 @@ router.beforeEach((to, from, next) => {
   else if (username && to.path === '/login') {
     next('/home');
   } 
-  // 其他情况正常放行
   else {
     next();
   }

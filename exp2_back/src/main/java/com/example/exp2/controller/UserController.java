@@ -164,4 +164,29 @@ public class UserController {
         userService.deleteUser(id);
         return new ResponseEntity<>("删除成功", HttpStatus.OK);
     }
+    
+    /**
+     * 搜索用户（模糊搜索）
+     */
+    @GetMapping("/search")
+    public ResponseEntity<?> searchUsers(@RequestParam String query) {
+        try {
+            if (query == null || query.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("搜索关键词不能为空");
+            }
+            
+            List<User> users = userService.searchUsers(query);
+            
+            // 移除敏感信息
+            users.forEach(user -> {
+                user.setPassword(null);  // 不返回密码
+            });
+            
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .body("搜索用户失败: " + e.getMessage());
+        }
+    }
 }

@@ -32,4 +32,7 @@ public interface UserMapper {
 
     @Delete("DELETE FROM users WHERE id = #{id}")
     void deleteById(Long id);  // 删除用户
+
+    @Select("SELECT * FROM users WHERE username LIKE CONCAT('%', #{query}, '%') OR email LIKE CONCAT('%', #{query}, '%') LIMIT 10")
+    List<User> searchUsers(String query);  // 模糊搜索用户
 }

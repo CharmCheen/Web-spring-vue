@@ -67,4 +67,13 @@ public class UserService {
     public User findByEmail(String email) {
         return userMapper.findByEmail(email);
     }
+    
+    /**
+     * 模糊搜索用户
+     * @param query 搜索关键词
+     * @return 匹配的用户列表
+     */
+    public List<User> searchUsers(String query) {
+        return userMapper.searchUsers(query);
+    }
 }

@@ -12,10 +12,10 @@ import './assets/styles/theme-blue.css'
 import './assets/styles/theme-yellow.css'
 import './assets/styles/global.css'
 
-// 清除所有登录状态
-localStorage.removeItem('user')
-localStorage.removeItem('username')
-localStorage.removeItem('token')
+// 开发阶段注释掉这些行，避免每次刷新页面都清除登录状态
+// localStorage.removeItem('user')
+// localStorage.removeItem('username')
+// localStorage.removeItem('token')
 
 // —— Axios 全局配置 ——
 // 1. 基准地址
