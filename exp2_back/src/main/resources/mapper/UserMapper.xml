@@ -82,4 +82,13 @@
         DELETE FROM users WHERE id = #{id}
     </delete>
 
+    <!-- 批量查询用户 -->
+    <select id="findUsersByUsernames" resultMap="BaseResultMap" parameterType="list">
+        SELECT * FROM users 
+        WHERE username IN 
+        <foreach collection="list" item="username" open="(" separator="," close=")">
+            #{username}
+        </foreach>
+    </select>
+
 </mapper>

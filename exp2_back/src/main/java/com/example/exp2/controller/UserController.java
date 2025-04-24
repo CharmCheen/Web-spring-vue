@@ -62,38 +62,47 @@ public class UserController {
         String account = loginRequest.get("account");
         String password = loginRequest.get("password");
 
-        // 验证必填字段
-        if (account == null || account.trim().isEmpty() ||
-            password == null || password.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("账号和密码不能为空");
+        try {
+            // 验证必填字段
+            if (account == null || account.trim().isEmpty() ||
+                password == null || password.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("账号和密码不能为空");
+            }
+
+            // 尝试通过用户名或邮箱查找用户
+            User user = userService.findByUsername(account);
+            if (user == null) {
+                user = userService.findByEmail(account);
+            }
+
+            // 用户不存在
+            if (user == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户不存在");
+            }
+
+            // 验证密码
+            if (!BCrypt.checkpw(password, user.getPassword())) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("密码错误");
+            }
+
+            // 创建返回的用户信息（排除敏感信息）
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("username", user.getUsername());
+            userInfo.put("email", user.getEmail());
+            userInfo.put("avatar", user.getAvatar());
+            userInfo.put("birthdate", user.getBirthdate());
+            userInfo.put("address", user.getAddress());
+            userInfo.put("postcode", user.getPostcode());
+
+            return ResponseEntity.ok(userInfo);
+        } catch (Exception e) {
+            // 记录异常信息
+            e.printStackTrace();
+            // 返回清晰的错误消息，避免"No message available"
+            return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("登录处理过程中发生错误：" + (e.getMessage() != null ? e.getMessage() : "未知错误"));
         }
-
-        // 尝试通过用户名或邮箱查找用户
-        User user = userService.findByUsername(account);
-        if (user == null) {
-            user = userService.findByEmail(account);
-        }
-
-        // 用户不存在
-        if (user == null) {
-            return ResponseEntity.badRequest().body("用户不存在");
-        }
-
-        // 验证密码
-        if (!BCrypt.checkpw(password, user.getPassword())) {
-            return ResponseEntity.badRequest().body("密码错误");
-        }
-
-        // 创建返回的用户信息（排除敏感信息）
-        Map<String, Object> userInfo = new HashMap<>();
-        userInfo.put("username", user.getUsername());
-        userInfo.put("email", user.getEmail());
-        userInfo.put("avatar", user.getAvatar());
-        userInfo.put("birthdate", user.getBirthdate());
-        userInfo.put("address", user.getAddress());
-        userInfo.put("postcode", user.getPostcode());
-
-        return ResponseEntity.ok(userInfo);
     }
 
     // 用户注册
@@ -187,6 +196,22 @@ public class UserController {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                 .body("搜索用户失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 批量获取用户信息
+     */
+    @GetMapping("/batch")
+    public ResponseEntity<?> getUsersByUsernames(@RequestParam List<String> usernames) {
+        try {
+            List<User> users = userService.findUsersByUsernames(usernames);
+            // 移除敏感信息
+            users.forEach(user -> user.setPassword(null));
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body("获取用户信息失败: " + e.getMessage());
         }
     }
 }

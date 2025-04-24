@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.exp2.mapper.SubscriptionMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="SubscriptionResultMap" type="com.example.exp2.entity.Subscription">
+        <id property="id" column="id"/>
+        <result property="subscriberUsername" column="subscriber_username"/>
+        <result property="publisherUsername" column="publisher_username"/>
+        <result property="createdAt" column="created_at"/>
+    </resultMap>
+
+    <!-- 添加关注关系 -->
+    <insert id="addSubscription" parameterType="com.example.exp2.entity.Subscription">
+        INSERT INTO subscription (subscriber_username, publisher_username, created_at) 
+        VALUES (#{subscriberUsername}, #{publisherUsername}, #{createdAt})
+    </insert>
+
+    <!-- 取消关注关系 -->
+    <delete id="removeSubscription">
+        DELETE FROM subscription 
+        WHERE subscriber_username = #{subscriberUsername} AND publisher_username = #{publisherUsername}
+    </delete>
+
+    <!-- 检查是否已关注 -->
+    <select id="isSubscribed" resultType="boolean">
+        SELECT COUNT(*) > 0 
+        FROM subscription 
+        WHERE subscriber_username = #{subscriberUsername} AND publisher_username = #{publisherUsername}
+    </select>
+
+    <!-- 获取用户的关注列表 -->
+    <select id="getSubscriptionsByUser" resultMap="SubscriptionResultMap">
+        SELECT * FROM subscription WHERE subscriber_username = #{username}
+    </select>
+
+    <!-- 获取关注用户的详细信息 -->
+    <select id="getSubscribedUsers" resultMap="com.example.exp2.mapper.UserMapper.BaseResultMap">
+        SELECT u.* 
+        FROM users u 
+        JOIN subscription s ON u.username = s.publisher_username 
+        WHERE s.subscriber_username = #{username}
+    </select>
+
+    <!-- 搜索用户（模糊搜索） -->
+    <select id="searchUsers" resultMap="com.example.exp2.mapper.UserMapper.BaseResultMap">
+        SELECT * FROM users WHERE username LIKE CONCAT('%', #{query}, '%') LIMIT 10
+    </select>
+</mapper>

@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -62,8 +63,33 @@ public class SubscriptionController {
      */
     @GetMapping("/my/{username}")
     public ResponseEntity<?> getMySubscriptions(@PathVariable String username) {
-        List<Subscription> subscriptions = subscriptionService.getSubscriptionsByUser(username);
-        return ResponseEntity.ok(subscriptions);
+        try {
+            System.out.println("获取用户关注列表: " + username); // 调试日志
+            if (username == null || username.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("用户名不能为空");
+            }
+            
+            List<Subscription> subscriptions = subscriptionService.getSubscriptionsByUser(username);
+            
+            // 保证返回的数据不为null
+            if (subscriptions == null) {
+                subscriptions = new ArrayList<>();
+            }
+            
+            System.out.println("找到关注数量: " + subscriptions.size()); // 调试日志
+            // 安全检查每个对象
+            for (Subscription sub : subscriptions) {
+                if (sub.getPublisherUsername() == null) {
+                    System.out.println("警告: 找到null发布者的订阅"); // 调试日志
+                }
+            }
+            
+            return ResponseEntity.ok(subscriptions);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("获取关注列表异常: " + e.getMessage()); // 调试日志
+            return ResponseEntity.status(500).body("获取关注列表失败: " + e.getMessage());
+        }
     }
 
     /**

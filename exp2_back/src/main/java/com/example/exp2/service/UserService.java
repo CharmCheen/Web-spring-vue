@@ -5,6 +5,7 @@ import com.example.exp2.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -75,5 +76,17 @@ public class UserService {
      */
     public List<User> searchUsers(String query) {
         return userMapper.searchUsers(query);
+    }
+
+    /**
+     * 根据多个用户名查找用户
+     * @param usernames 用户名列表
+     * @return 用户列表
+     */
+    public List<User> findUsersByUsernames(List<String> usernames) {
+        if (usernames == null || usernames.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return userMapper.findUsersByUsernames(usernames);
     }
 }

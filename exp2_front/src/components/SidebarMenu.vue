@@ -27,7 +27,7 @@
             <i class="el-icon-document"></i>
             <span>文章管理</span>
           </template>
-          <el-menu-item index="/feed">
+          <el-menu-item index="/followed-articles">
             <span>关注动态</span>
           </el-menu-item>
           <el-menu-item index="/articles/create">

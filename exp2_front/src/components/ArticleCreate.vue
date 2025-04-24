@@ -1,41 +1,75 @@
 <template>
   <div class="article-create-container">
-    <div class="article-create-wrapper">
-      <div class="article-create-header">
-        <h2>发布新文章</h2>
-        <p>分享你的知识和见解</p>
+    <!-- 顶部英雄区域 -->
+    <div class="hero-section">
+      <div class="content-wrapper">
+        <h2 class="page-title">创作新内容</h2>
+        <p class="page-subtitle">分享你的想法、知识和经验，连接你的读者</p>
       </div>
-      <el-form :model="article" label-width="80px" class="article-form">
-        <el-form-item label="标题" prop="title">
-          <el-input 
-            v-model="article.title" 
-            placeholder="请输入文章标题"
-            size="large"
-            class="title-input"
-          ></el-input>
-        </el-form-item>
-        <el-form-item label="内容" prop="content">
-          <div class="editor-container">
-            <v-md-editor
-              v-model="article.content"
-              height="500px"
-              :toolbar="toolbar"
-              :mode="mode"
-              @change="handleChange"
-              @save="submitArticle"
-              class="markdown-editor"
-            ></v-md-editor>
+    </div>
+
+    <div class="content-section">
+      <!-- 编辑区域 -->
+      <div class="article-create-wrapper">
+        <el-form :model="article" label-width="0" class="article-form">
+          <div class="form-section title-section">
+            <h3 class="section-title">文章标题</h3>
+            <el-input 
+              v-model="article.title" 
+              placeholder="输入一个引人注目的标题..."
+              size="large"
+              class="title-input"
+              maxlength="100"
+              show-word-limit
+            ></el-input>
           </div>
-        </el-form-item>
-        <el-form-item class="submit-buttons">
-          <div class="btn-group">
-            <el-button type="primary" size="large" @click="submitArticle" :loading="loading">
-              发布文章
-            </el-button>
-            <el-button size="large" @click="cancel">取消</el-button>
+          
+          <div class="form-section cover-section">
+            <h3 class="section-title">封面图片</h3>
+            <p class="section-description">一张好的封面图片能吸引更多读者</p>
+            <el-upload
+              class="cover-uploader"
+              action="/api/upload"
+              :show-file-list="false"
+              :on-success="handleUploadSuccess"
+              :before-upload="beforeUpload"
+            >
+              <div v-if="!article.coverImage" class="upload-placeholder">
+                <i class="el-icon-plus"></i>
+                <p>点击上传封面图片</p>
+              </div>
+              <img v-else :src="article.coverImage" class="cover-preview">
+            </el-upload>
           </div>
-        </el-form-item>
-      </el-form>
+
+          <div class="form-section content-section">
+            <h3 class="section-title">文章内容</h3>
+            <p class="section-description">使用Markdown格式编写你的文章</p>
+            <div class="editor-container">
+              <v-md-editor
+                v-model="article.content"
+                height="500px"
+                :toolbar="toolbar"
+                :mode="mode"
+                @change="handleChange"
+                @save="submitArticle"
+                :disabled-menus="[]"
+                @init-complete="handleEditorInitComplete"
+                class="markdown-editor"
+              ></v-md-editor>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <div class="btn-group">
+              <el-button plain @click="cancel">取消</el-button>
+              <el-button type="primary" @click="submitArticle" :loading="loading">
+                发布文章
+              </el-button>
+            </div>
+          </div>
+        </el-form>
+      </div>
     </div>
   </div>
 </template>
@@ -74,13 +108,17 @@ VMdEditor.use(createTodoListPlugin())
 const article = ref({
   title: '',
   content: '',
+  coverImage: '',
   authorUsername: localStorage.getItem('username')
 })
 
 const mode = ref('edit')
 const loading = ref(false)
 
-const toolbar = {
+const editorRef = ref(null)
+const isEditorReady = ref(false)
+
+const toolbar = ref({
   left: [
     'undo',
     'redo',
@@ -106,13 +144,52 @@ const toolbar = {
     'fullscreen'
   ],
   right: ['save']
+})
+
+const handleEditorInitComplete = (editor) => {
+  editorRef.value = editor
+  isEditorReady.value = true
+  console.log('编辑器初始化完成')
 }
 
 const handleChange = (text) => {
+  if (!isEditorReady.value) {
+    console.log('编辑器未就绪，忽略变更')
+    return
+  }
   console.log('内容变化:', text)
 }
 
+// 处理封面上传成功
+const handleUploadSuccess = (response) => {
+  article.value.coverImage = response.url
+  ElMessage.success('封面上传成功')
+}
+
+// 上传前的验证
+const beforeUpload = (file) => {
+  const isImage = file.type.startsWith('image/')
+  const isLt2M = file.size / 1024 / 1024 < 2
+  
+  if (!isImage) {
+    ElMessage.error('只能上传图片文件！')
+    return false
+  }
+  
+  if (!isLt2M) {
+    ElMessage.error('图片大小不能超过2MB！')
+    return false
+  }
+  
+  return true
+}
+
 const submitArticle = async () => {
+  if (!isEditorReady.value) {
+    ElMessage.warning('编辑器正在初始化，请稍候再试')
+    return
+  }
+
   if (!article.value.title) {
     ElMessage.warning('请输入文章标题')
     return
@@ -130,6 +207,7 @@ const submitArticle = async () => {
     article.value = {
       title: '',
       content: '',
+      coverImage: '',
       authorUsername: localStorage.getItem('username')
     }
     // 跳转到文章列表页
@@ -148,135 +226,234 @@ const cancel = () => {
 
 <style scoped>
 .article-create-container {
-  padding: 32px 0 32px 0;
-  background-color: #f5f7fa;
-  min-height: calc(100vh - 60px);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
+  min-height: 100vh;
+  background-color: var(--bg-color);
+}
+
+.hero-section {
+  background: linear-gradient(to right, var(--primary-color), var(--primary-color-light));
+  padding: 60px 0;
+  color: white;
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.page-title {
+  font-size: 42px;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.5px;
+  animation: fadeIn 1s ease-out;
+}
+
+.page-subtitle {
+  font-size: 20px;
+  font-weight: 300;
+  margin-top: 16px;
+  opacity: 0.9;
+  animation: fadeIn 1s ease-out 0.2s both;
+}
+
+.content-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
 .article-create-wrapper {
   width: 100%;
   max-width: 900px;
-  background-color: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.08);
-  padding: 36px 40px 32px 40px;
-  margin: 0 auto;
-}
-
-.article-create-header {
-  margin-bottom: 32px;
-  text-align: center;
-}
-
-.article-create-header h2 {
-  font-size: 26px;
-  color: #303133;
-  margin-bottom: 8px;
-}
-
-.article-create-header p {
-  font-size: 15px;
-  color: #909399;
+  background-color: var(--card-bg);
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
+  padding: 40px;
+  margin: 0 auto 60px;
+  animation: slideUp 0.8s ease-out;
 }
 
 .article-form {
-  max-width: 760px;
-  margin: 0 auto;
+  width: 100%;
+}
+
+.form-section {
+  margin-bottom: 36px;
+}
+
+.section-title {
+  font-size: 22px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: var(--text-color);
+}
+
+.section-description {
+  color: var(--text-color-light);
+  margin-bottom: 16px;
+  font-size: 15px;
 }
 
 .title-input {
-  font-size: 17px;
+  width: 100%;
+}
+
+.cover-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.cover-uploader {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.upload-placeholder {
+  width: 100%;
+  height: 240px;
+  background-color: rgba(0, 0, 0, 0.02);
+  border: 2px dashed #d9d9d9;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-color-light);
+  transition: all 0.3s;
+}
+
+.upload-placeholder:hover {
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.upload-placeholder i {
+  font-size: 40px;
+  margin-bottom: 10px;
+}
+
+.cover-preview {
+  width: 100%;
+  height: 240px;
+  object-fit: cover;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .editor-container {
-  width: 100%;
-  box-sizing: border-box;
-  border: 1px solid #dcdfe6;
-  border-radius: 6px;
-  overflow: hidden;
-  transition: all 0.3s;
-  background: #fafbfc;
-  margin: 0;
-  padding: 0;
+  position: relative;
+  min-height: 500px;
 }
 
 .editor-container:hover {
-  border-color: #409eff;
-}
-
-.markdown-editor {
-  width: 100%;
-  min-width: 0;
+  border-color: var(--primary-color);
 }
 
 :deep(.v-md-editor) {
-  min-height: 350px;
-  height: 500px;
+  min-height: 500px;
 }
 
 :deep(.v-md-editor__toolbar) {
   background-color: #f5f7fa;
   border-bottom: 1px solid #dcdfe6;
-  padding: 8px 0;
 }
 
 :deep(.v-md-editor__toolbar-item) {
   color: #606266;
-  margin: 0 8px;
 }
 
 :deep(.v-md-editor__toolbar-item:hover) {
-  color: #409eff;
+  color: var(--primary-color);
 }
 
-:deep(.v-md-editor__preview) {
-  padding: 20px;
+:deep(.v-md-textarea-editor) {
+  min-height: 450px;
 }
 
-.submit-buttons {
-  margin-top: 32px;
-  padding-right: 0;
+:deep(.v-md-editor__menu-bar) {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 48px;
 }
 
 .btn-group {
   display: flex;
-  justify-content: flex-end;
-  gap: 18px;
+  gap: 16px;
 }
 
-.submit-buttons .el-button {
+.btn-group .el-button {
   min-width: 120px;
+  height: 44px;
+  font-size: 16px;
 }
 
-@media (max-width: 900px) {
-  .article-create-wrapper {
-    padding: 20px 8px;
+/* 动画 */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    transform: translateY(20px);
+    opacity: 0;
   }
-  .article-form {
-    max-width: 100%;
-    padding: 0 2px;
+  to { 
+    transform: translateY(0);
+    opacity: 1;
   }
 }
+
+/* 响应式设计 */
+@media (max-width: 900px) {
+  .hero-section {
+    padding: 40px 0;
+  }
+  
+  .page-title {
+    font-size: 32px;
+  }
+  
+  .page-subtitle {
+    font-size: 18px;
+  }
+  
+  .article-create-wrapper {
+    padding: 30px 20px;
+  }
+}
+
 @media (max-width: 600px) {
   .article-create-wrapper {
-    padding: 10px 0;
-    border-radius: 0;
-    box-shadow: none;
+    padding: 20px 15px;
+    border-radius: 12px;
   }
-  .article-form {
-    padding: 0 2px;
+  
+  .form-actions {
+    margin-top: 32px;
   }
-  .submit-buttons .btn-group {
-    flex-direction: column;
+  
+  .btn-group {
+    width: 100%;
+    flex-direction: column-reverse;
     align-items: stretch;
-    gap: 10px;
   }
-  .submit-buttons {
-    text-align: center;
-    padding-right: 0;
+  
+  .upload-placeholder,
+  .cover-preview {
+    height: 180px;
   }
 }
 </style>

@@ -11,6 +11,7 @@ import ArticleManage from '../components/ArticleManage.vue';
 import ArticleEdit from '../components/ArticleEdit.vue';
 import ArticleFeed from '../components/ArticleFeed.vue';
 import SubscriptionList from '../components/SubscriptionList.vue';
+import FollowedArticles from '../pages/FollowedArticles.vue';
 
 const routes = [
   {
@@ -87,6 +88,12 @@ const routes = [
     path: '/feature/files',
     name: 'FileManagement',
     component: FileManagement,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/followed-articles',
+    name: 'FollowedArticles',
+    component: FollowedArticles,
     meta: { requiresAuth: true }
   }
 ];

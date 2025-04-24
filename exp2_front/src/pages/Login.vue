@@ -146,20 +146,20 @@ export default {
               
               if (typeof responseData === 'string') {
                 // 如果响应是字符串，直接使用
-                errorMessage = responseData;
+                errorMessage = responseData === 'No message available' ? '登录失败：用户名或密码错误' : responseData;
               } else if (responseData && responseData.message) {
                 // 如果响应中有message字段
-                errorMessage = responseData.message;
+                errorMessage = responseData.message === 'No message available' ? '登录失败：用户名或密码错误' : responseData.message;
               } else if (responseData && typeof responseData === 'object') {
                 // 尝试找到对象中的任何可能的错误信息
                 const firstValue = Object.values(responseData)[0];
                 if (firstValue && typeof firstValue === 'string') {
-                  errorMessage = firstValue;
+                  errorMessage = firstValue === 'No message available' ? '登录失败：用户名或密码错误' : firstValue;
                 }
               }
               
-              // 如果没有具体信息，根据状态码给出提示
-              if (errorMessage === '登录失败') {
+              // 如果没有具体信息或显示No message available，根据状态码给出提示
+              if (errorMessage === '登录失败' || errorMessage === 'No message available') {
                 switch (error.response.status) {
                   case 400:
                     errorMessage = '登录失败：请求参数错误';
@@ -173,6 +173,8 @@ export default {
                   case 500:
                     errorMessage = '登录失败：服务器内部错误';
                     break;
+                  default:
+                    errorMessage = '登录失败：请检查账号和密码';
                 }
               }
             } else if (error.request) {

@@ -3,6 +3,7 @@ package com.example.exp2.entity;
 import java.time.LocalDateTime;
 
 public class Subscription {
+    private Long id;                   // 主键ID，匹配数据库表中的id字段
     private String subscriberUsername;  // 关注者的用户名
     private String publisherUsername;   // 被关注者的用户名
     private LocalDateTime createdAt;    // 关注时间
@@ -19,6 +20,14 @@ public class Subscription {
     }
 
     // Getters and Setters
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
     public String getSubscriberUsername() {
         return subscriberUsername;
     }
