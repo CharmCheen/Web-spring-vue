@@ -4,6 +4,7 @@ import com.example.exp2.entity.Article;
 import org.apache.ibatis.annotations.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Mapper
 public interface ArticleMapper {
@@ -30,4 +31,25 @@ public interface ArticleMapper {
             "WHERE s.subscriber_username = #{username} " +
             "ORDER BY a.created_at DESC")
     List<Article> selectFeed(String username);
+
+    @Select("SELECT a.* FROM articles a " +
+            "JOIN subscriptions s ON a.author_username = s.publisher_username " +
+            "WHERE s.subscriber_username = #{username} " +
+            "ORDER BY a.created_at DESC")
+    List<Article> selectFollowedArticles(String username);
+
+    @Select({
+        "<script>",
+        "SELECT * FROM articles",
+        "WHERE author_username IN",
+        "<foreach collection='authors' item='author' open='(' separator=',' close=')'>",
+        "#{author}",
+        "</foreach>",
+        "ORDER BY created_at DESC",
+        "</script>"
+    })
+    List<Article> selectArticlesByAuthors(@Param("authors") Set<String> authors);
+
+    @Select("SELECT * FROM articles ORDER BY created_at DESC LIMIT #{limit}")
+    List<Article> selectRecentArticles(@Param("limit") int limit);
 } 

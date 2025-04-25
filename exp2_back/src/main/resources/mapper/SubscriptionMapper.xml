@@ -14,27 +14,29 @@
     </resultMap>
 
     <!-- 添加关注关系 -->
-    <insert id="addSubscription" parameterType="com.example.exp2.entity.Subscription">
+    <insert id="subscribe">
         INSERT INTO subscription (subscriber_username, publisher_username, created_at) 
-        VALUES (#{subscriberUsername}, #{publisherUsername}, #{createdAt})
+        VALUES (#{subscriberUsername}, #{publisherUsername}, NOW())
     </insert>
 
     <!-- 取消关注关系 -->
-    <delete id="removeSubscription">
+    <delete id="unsubscribe">
         DELETE FROM subscription 
         WHERE subscriber_username = #{subscriberUsername} AND publisher_username = #{publisherUsername}
     </delete>
 
     <!-- 检查是否已关注 -->
-    <select id="isSubscribed" resultType="boolean">
-        SELECT COUNT(*) > 0 
+    <select id="isSubscribed" resultType="int">
+        SELECT COUNT(*) 
         FROM subscription 
         WHERE subscriber_username = #{subscriberUsername} AND publisher_username = #{publisherUsername}
     </select>
 
     <!-- 获取用户的关注列表 -->
-    <select id="getSubscriptionsByUser" resultMap="SubscriptionResultMap">
-        SELECT * FROM subscription WHERE subscriber_username = #{username}
+    <select id="findFollowedUsers" resultType="string">
+        SELECT publisher_username 
+        FROM subscription 
+        WHERE subscriber_username = #{username}
     </select>
 
     <!-- 获取关注用户的详细信息 -->

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class SubscriptionService {
@@ -22,9 +23,9 @@ public class SubscriptionService {
     @Transactional
     public void subscribe(Subscription subscription) {
         // 检查是否已经关注
-        if (!subscriptionMapper.isSubscribed(subscription.getSubscriberUsername(), subscription.getPublisherUsername())) {
+        if (subscriptionMapper.isSubscribed(subscription.getSubscriberUsername(), subscription.getPublisherUsername()) == 0) {
             // 没有关注则添加关注
-            subscriptionMapper.addSubscription(subscription);
+            subscriptionMapper.subscribe(subscription.getSubscriberUsername(), subscription.getPublisherUsername());
         }
     }
 
@@ -34,7 +35,7 @@ public class SubscriptionService {
      */
     @Transactional
     public void unsubscribe(Subscription subscription) {
-        subscriptionMapper.removeSubscription(subscription.getSubscriberUsername(), subscription.getPublisherUsername());
+        subscriptionMapper.unsubscribe(subscription.getSubscriberUsername(), subscription.getPublisherUsername());
     }
 
     /**
@@ -43,7 +44,10 @@ public class SubscriptionService {
      * @return 关注列表
      */
     public List<Subscription> getSubscriptions(String username) {
-        return subscriptionMapper.getSubscriptionsByUser(username);
+        return subscriptionMapper.findFollowedUsers(username)
+                .stream()
+                .map(publisherUsername -> new Subscription(username, publisherUsername))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -70,16 +74,12 @@ public class SubscriptionService {
         }
         
         // 检查是否已经关注
-        if (subscriptionMapper.isSubscribed(subscriberUsername, publisherUsername)) {
+        if (subscriptionMapper.isSubscribed(subscriberUsername, publisherUsername) > 0) {
             return false;
         }
         
-        // 创建关注关系
-        Subscription subscription = new Subscription(subscriberUsername, publisherUsername);
-        
         try {
-            subscriptionMapper.addSubscription(subscription);
-            return true;
+            return subscriptionMapper.subscribe(subscriberUsername, publisherUsername) > 0;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -94,8 +94,7 @@ public class SubscriptionService {
      */
     public boolean unsubscribeUser(String subscriberUsername, String publisherUsername) {
         try {
-            subscriptionMapper.removeSubscription(subscriberUsername, publisherUsername);
-            return true;
+            return subscriptionMapper.unsubscribe(subscriberUsername, publisherUsername) > 0;
         } catch (Exception e) {
             e.printStackTrace();
             return false;
@@ -108,7 +107,10 @@ public class SubscriptionService {
      * @return 关注列表
      */
     public List<Subscription> getSubscriptionsByUser(String username) {
-        return subscriptionMapper.getSubscriptionsByUser(username);
+        return subscriptionMapper.findFollowedUsers(username)
+                .stream()
+                .map(publisherUsername -> new Subscription(username, publisherUsername))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -136,6 +138,6 @@ public class SubscriptionService {
      * @return 是否已关注
      */
     public boolean isSubscribed(String subscriberUsername, String publisherUsername) {
-        return subscriptionMapper.isSubscribed(subscriberUsername, publisherUsername);
+        return subscriptionMapper.isSubscribed(subscriberUsername, publisherUsername) > 0;
     }
 }

@@ -19,6 +19,26 @@ public class ArticleController {
         return ResponseEntity.ok(articleService.createArticle(article));
     }
 
+    @GetMapping("/followed")
+    public ResponseEntity<List<Article>> getFollowedArticles(@RequestHeader("Authorization") String token) {
+        if (token == null || token.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        // 直接使用token作为用户名，因为我们在登录时将用户名存为token
+        String username = token;
+        return ResponseEntity.ok(articleService.getFollowedArticles(username));
+    }
+
+    @GetMapping("/author/{username}")
+    public ResponseEntity<List<Article>> getArticlesByAuthor(@PathVariable String username) {
+        return ResponseEntity.ok(articleService.getArticlesByAuthor(username));
+    }
+
+    @GetMapping("/feed/{username}")
+    public ResponseEntity<List<Article>> getFeed(@PathVariable String username) {
+        return ResponseEntity.ok(articleService.getFeed(username));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<Article> updateArticle(@PathVariable Long id, @RequestBody Article article) {
         article.setArticleId(id);
@@ -36,13 +56,8 @@ public class ArticleController {
         return ResponseEntity.ok(articleService.getArticleById(id));
     }
 
-    @GetMapping("/author/{username}")
-    public ResponseEntity<List<Article>> getArticlesByAuthor(@PathVariable String username) {
-        return ResponseEntity.ok(articleService.getArticlesByAuthor(username));
-    }
-
-    @GetMapping("/feed/{username}")
-    public ResponseEntity<List<Article>> getFeed(@PathVariable String username) {
-        return ResponseEntity.ok(articleService.getFeed(username));
+    @GetMapping("/recommended")
+    public ResponseEntity<List<Article>> getRecommendedArticles() {
+        return ResponseEntity.ok(articleService.getRecommendedArticles());
     }
 } 

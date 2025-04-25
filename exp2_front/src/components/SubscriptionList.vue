@@ -294,8 +294,8 @@ export default {
         searching.value = true;
         hasSearched.value = true;
         
-        console.log('搜索请求:', `/api/user/search?query=${encodeURIComponent(searchQuery.value.trim())}`);
-        const response = await axios.get(`/api/user/search?query=${encodeURIComponent(searchQuery.value.trim())}`);
+        console.log('搜索请求:', `/api/subscriptions/search?query=${encodeURIComponent(searchQuery.value.trim())}`);
+        const response = await axios.get(`/api/subscriptions/search?query=${encodeURIComponent(searchQuery.value.trim())}`);
         
         if (Array.isArray(response.data)) {
           searchResults.value = response.data;

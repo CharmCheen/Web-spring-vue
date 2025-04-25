@@ -94,7 +94,7 @@ const routes = [
     path: '/followed-articles',
     name: 'FollowedArticles',
     component: FollowedArticles,
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: false }
   }
 ];
 

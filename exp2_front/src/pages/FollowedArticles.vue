@@ -14,7 +14,7 @@
       
       <div v-else-if="articles.length === 0" class="empty-state">
         <el-empty description="暂无关注的创作者发布新文章">
-          <el-button type="primary" @click="$router.push('/articles')">去发现更多创作者</el-button>
+          <el-button type="primary" @click="goToLogin">去发现更多创作者</el-button>
         </el-empty>
       </div>
       
@@ -34,6 +34,30 @@
         </el-card>
       </div>
     </div>
+
+    <el-dialog
+      v-model="previewDialogVisible"
+      title="文章预览"
+      width="80%"
+      :before-close="closePreviewDialog"
+    >
+      <div v-if="currentArticle" class="preview-content">
+        <h3>{{ currentArticle.title }}</h3>
+        <div class="article-meta">
+          <span class="author">作者：{{ currentArticle.authorUsername }}</span>
+          <span class="date">发布于：{{ formatDate(currentArticle.createTime) }}</span>
+        </div>
+        <div class="article-cover" v-if="currentArticle.coverImage">
+          <img :src="currentArticle.coverImage" :alt="currentArticle.title">
+        </div>
+        <div class="article-body">
+          {{ currentArticle.content }}
+        </div>
+      </div>
+      <div v-else class="preview-error">
+        <el-empty description="文章内容加载失败" />
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -46,19 +70,46 @@ import { ElMessage } from 'element-plus'
 const router = useRouter()
 const articles = ref([])
 const loading = ref(true)
+const currentArticle = ref(null)
+const previewDialogVisible = ref(false)
 
 // 获取关注用户的文章
 const fetchFollowedArticles = async () => {
   try {
+    console.log('开始获取关注动态')
+    const token = localStorage.getItem('token')
+    const username = localStorage.getItem('username')
+    
+    // 如果未登录，跳转到登录页
+    if (!token || !username) {
+      ElMessage.warning('请先登录后继续操作')
+      router.push('/login')
+      return
+    }
+    
+    console.log('当前用户:', username)
     const response = await axios.get('/api/articles/followed', {
       headers: {
-        'Authorization': 'Bearer ' + localStorage.getItem('token')
+        'Authorization': token
       }
     })
-    articles.value = response.data
+    console.log('获取到的数据:', response.data)
+    if (Array.isArray(response.data)) {
+      articles.value = response.data
+    } else {
+      articles.value = []
+      ElMessage.warning('暂无关注动态')
+    }
   } catch (error) {
-    ElMessage.error('获取关注动态失败')
-    console.error('获取关注动态失败:', error)
+    console.error('获取动态详细错误:', error.response || error)
+    if (error.response?.status === 401) {
+      // 如果是未授权错误，清除本地存储并跳转到登录页
+      localStorage.removeItem('token')
+      localStorage.removeItem('username')
+      router.push('/login')
+    } else {
+      ElMessage.error(error.response?.data?.message || '获取动态失败')
+    }
   } finally {
     loading.value = false
   }
@@ -76,12 +127,48 @@ const formatDate = (dateString) => {
 
 // 查看文章详情
 const viewArticle = (articleId) => {
-  router.push('/articles/' + articleId)
+  const token = localStorage.getItem('token')
+  const username = localStorage.getItem('username')
+  
+  // 如果未登录，跳转到登录页
+  if (!token || !username) {
+    ElMessage.warning('请先登录后继续操作')
+    router.push('/login')
+    return
+  }
+
+  // 找到当前点击的文章
+  const article = articles.value.find(a => a.id === articleId)
+  if (article) {
+    currentArticle.value = article
+    previewDialogVisible.value = true
+  }
+}
+
+// 修改模板部分
+const goToLogin = () => {
+  router.push('/login')
+}
+
+// 关闭预览对话框
+const closePreviewDialog = () => {
+  currentArticle.value = null
+  previewDialogVisible.value = false
 }
 
 onMounted(() => {
   fetchFollowedArticles()
 })
+
+return {
+  articles,
+  loading,
+  formatDate,
+  viewArticle,
+  goToLogin,
+  currentArticle,
+  previewDialogVisible
+}
 </script>
 
 <style scoped>
@@ -193,6 +280,71 @@ onMounted(() => {
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+}
+
+.preview-content {
+  padding: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.preview-content h3 {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--el-text-color-primary);
+}
+
+.preview-content .article-meta {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 24px;
+  color: var(--el-text-color-secondary);
+  font-size: 14px;
+}
+
+.preview-content .article-cover {
+  margin: 0 -20px 24px;
+  height: 300px;
+  overflow: hidden;
+}
+
+.preview-content .article-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.preview-content .article-body {
+  font-size: 16px;
+  line-height: 1.8;
+  color: var(--el-text-color-regular);
+  white-space: pre-wrap;
+}
+
+.preview-error {
+  padding: 40px 20px;
+  text-align: center;
+}
+
+:deep(.el-dialog) {
+  border-radius: 8px;
+}
+
+:deep(.el-dialog__header) {
+  margin-right: 0;
+  padding: 20px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+:deep(.el-dialog__body) {
+  padding: 0;
+}
+
+:deep(.el-dialog__title) {
+  font-size: 18px;
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {
