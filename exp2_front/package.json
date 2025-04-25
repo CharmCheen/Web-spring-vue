@@ -13,7 +13,7 @@
     "core-js": "^3.8.3",
     "element-china-area-data": "^6.1.0",
     "element-plus": "^2.3.8",
-    "vue": "^3.3.4",
+    "vue": "^3.5.13",
     "vue-router": "^4.2.4",
     "vuepress-theme-vdoing": "^1.12.9"
   },

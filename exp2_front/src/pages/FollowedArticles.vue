@@ -14,20 +14,20 @@
       
       <div v-else-if="articles.length === 0" class="empty-state">
         <el-empty description="暂无关注的创作者发布新文章">
-          <el-button type="primary" @click="goToLogin">去发现更多创作者</el-button>
+          <el-button type="primary" @click="goToSubscriptions">去发现更多创作者</el-button>
         </el-empty>
       </div>
       
       <div v-else class="articles-grid">
-        <el-card v-for="article in articles" :key="article.id" class="article-card">
+        <el-card v-for="article in articles" :key="article.id || article.articleId" class="article-card">
           <div class="article-cover" v-if="article.coverImage">
             <img :src="article.coverImage" :alt="article.title">
           </div>
           <div class="article-content">
-            <h3 class="article-title" @click="viewArticle(article.id)">{{ article.title }}</h3>
+            <h3 class="article-title" @click="viewArticle(article.id || article.articleId)">{{ article.title }}</h3>
             <div class="article-meta">
               <span class="author">{{ article.authorUsername }}</span>
-              <span class="date">{{ formatDate(article.createTime) }}</span>
+              <span class="date">{{ formatDate(article.createTime || article.createdAt) }}</span>
             </div>
             <p class="article-excerpt" v-if="article.content">{{ article.content.substring(0, 100) }}...</p>
           </div>
@@ -45,7 +45,7 @@
         <h3>{{ currentArticle.title }}</h3>
         <div class="article-meta">
           <span class="author">作者：{{ currentArticle.authorUsername }}</span>
-          <span class="date">发布于：{{ formatDate(currentArticle.createTime) }}</span>
+          <span class="date">发布于：{{ formatDate(currentArticle.createTime || currentArticle.createdAt) }}</span>
         </div>
         <div class="article-cover" v-if="currentArticle.coverImage">
           <img :src="currentArticle.coverImage" :alt="currentArticle.title">
@@ -73,43 +73,58 @@ const loading = ref(true)
 const currentArticle = ref(null)
 const previewDialogVisible = ref(false)
 
-// 获取关注用户的文章
+// 获取关注用户的文章 - 简化版本
 const fetchFollowedArticles = async () => {
+  loading.value = true
+  articles.value = [] // 清空文章列表
+  
   try {
-    console.log('开始获取关注动态')
-    const token = localStorage.getItem('token')
+    // 获取用户信息
     const username = localStorage.getItem('username')
-    
-    // 如果未登录，跳转到登录页
-    if (!token || !username) {
-      ElMessage.warning('请先登录后继续操作')
-      router.push('/login')
-      return
+    if (!username) {
+      throw new Error('未登录')
     }
     
     console.log('当前用户:', username)
-    const response = await axios.get('/api/articles/followed', {
-      headers: {
-        'Authorization': token
+    
+    // 首先尝试获取该用户关注的所有作者
+    const subscriptionsResponse = await axios.get(`/api/subscriptions/my/${username}`)
+    console.log('关注列表:', subscriptionsResponse.data)
+    
+    if (!Array.isArray(subscriptionsResponse.data) || subscriptionsResponse.data.length === 0) {
+      console.log('没有关注任何作者')
+      loading.value = false
+      return
+    }
+    
+    // 获取所有关注作者的文章
+    const publisherUsernames = subscriptionsResponse.data.map(sub => sub.publisherUsername)
+    console.log('正在获取以下作者的文章:', publisherUsernames)
+    
+    // 针对每个作者获取文章
+    const allArticles = []
+    for (const publisherUsername of publisherUsernames) {
+      try {
+        const articleResponse = await axios.get(`/api/articles/author/${publisherUsername}`)
+        if (Array.isArray(articleResponse.data)) {
+          allArticles.push(...articleResponse.data)
+        }
+      } catch (error) {
+        console.error(`获取作者 ${publisherUsername} 的文章出错:`, error)
       }
+    }
+    
+    // 按时间排序文章
+    articles.value = allArticles.sort((a, b) => {
+      const dateA = new Date(a.createdAt || a.createTime)
+      const dateB = new Date(b.createdAt || b.createTime)
+      return dateB - dateA // 降序排列，最新的在前面
     })
-    console.log('获取到的数据:', response.data)
-    if (Array.isArray(response.data)) {
-      articles.value = response.data
-    } else {
-      articles.value = []
-      ElMessage.warning('暂无关注动态')
-    }
+    
+    console.log('总共获取到文章:', articles.value.length)
   } catch (error) {
-    console.error('获取动态详细错误:', error.response || error)
-    if (error.response?.status === 401) {
-      // 如果是未授权错误，清除本地存储并跳转到登录页
-      localStorage.removeItem('token')
-      localStorage.removeItem('username')
-      router.push('/login')
-    } else {
-      ElMessage.error(error.response?.data?.message || '获取动态失败')
-    }
+    console.error('获取关注文章失败:', error)
+    ElMessage.error('获取关注文章失败: ' + (error.message || '未知错误'))
   } finally {
     loading.value = false
   }
@@ -117,6 +132,7 @@ const fetchFollowedArticles = async () => {
 
 // 格式化日期
 const formatDate = (dateString) => {
+  if (!dateString) return '未知时间'
   const date = new Date(dateString)
   return date.toLocaleDateString('zh-CN', {
     year: 'numeric',
@@ -127,27 +143,22 @@ const formatDate = (dateString) => {
 
 // 查看文章详情
 const viewArticle = (articleId) => {
-  const token = localStorage.getItem('token')
-  const username = localStorage.getItem('username')
+  const article = articles.value.find(a => 
+    (a.id === articleId) || (a.articleId === articleId)
+  )
   
-  // 如果未登录，跳转到登录页
-  if (!token || !username) {
-    ElMessage.warning('请先登录后继续操作')
-    router.push('/login')
-    return
-  }
-
-  // 找到当前点击的文章
-  const article = articles.value.find(a => a.id === articleId)
   if (article) {
     currentArticle.value = article
     previewDialogVisible.value = true
+  } else {
+    console.error('找不到指定 ID 的文章:', articleId)
+    ElMessage.warning('文章详情获取失败')
   }
 }
 
-// 修改模板部分
-const goToLogin = () => {
-  router.push('/login')
+// 导航到关注页面
+const goToSubscriptions = () => {
+  router.push('/subscriptions')
 }
 
 // 关闭预览对话框
@@ -159,16 +170,6 @@ const closePreviewDialog = () => {
 onMounted(() => {
   fetchFollowedArticles()
 })
-
-return {
-  articles,
-  loading,
-  formatDate,
-  viewArticle,
-  goToLogin,
-  currentArticle,
-  previewDialogVisible
-}
 </script>
 
 <style scoped>
@@ -364,4 +365,4 @@ return {
     grid-template-columns: 1fr;
   }
 }
-</style> 
+</style>
