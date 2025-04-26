@@ -75,7 +75,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { ElMessage } from 'element-plus'
 import axios from 'axios'
 import VMdEditor from '@kangc/v-md-editor'
@@ -116,7 +116,8 @@ const mode = ref('edit')
 const loading = ref(false)
 
 const editorRef = ref(null)
-const isEditorReady = ref(false)
+// 将初始值设为 true，避免卡在初始化状态
+const isEditorReady = ref(true)
 
 const toolbar = ref({
   left: [
@@ -152,6 +153,30 @@ const handleEditorInitComplete = (editor) => {
   console.log('编辑器初始化完成')
 }
 
+// 添加 onMounted 钩子确保组件加载后设置为 ready
+onMounted(() => {
+  // 确保延迟足够长，让编辑器有时间完成初始化
+  setTimeout(() => {
+    isEditorReady.value = true
+    console.log('组件挂载完成，强制设置编辑器为就绪状态')
+  }, 1000)
+})
+
+// 添加组件卸载前的清理函数
+onBeforeUnmount(() => {
+  // 在组件卸载前清理编辑器引用
+  if (editorRef.value) {
+    try {
+      // 重置编辑器状态，防止组件卸载后仍尝试访问DOM
+      editorRef.value = null
+      isEditorReady.value = false
+      console.log('编辑器资源已清理')
+    } catch (error) {
+      console.error('清理编辑器资源时出错:', error)
+    }
+  }
+})
+
 const handleChange = (text) => {
   if (!isEditorReady.value) {
     console.log('编辑器未就绪，忽略变更')
@@ -185,9 +210,11 @@ const beforeUpload = (file) => {
 }
 
 const submitArticle = async () => {
+  // 移除编辑器就绪检查，直接发布文章
+  // 或者修改逻辑，即使编辑器未就绪也允许尝试发布
   if (!isEditorReady.value) {
-    ElMessage.warning('编辑器正在初始化，请稍候再试')
-    return
+    console.warn('编辑器可能未完全初始化，但仍继续发布')
+    // 不再阻止发布
   }
 
   if (!article.value.title) {

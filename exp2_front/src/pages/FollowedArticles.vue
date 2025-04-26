@@ -156,15 +156,15 @@ const viewArticle = (articleId) => {
   }
 }
 
+// 关闭预览对话框
+const closePreviewDialog = () => {
+  previewDialogVisible.value = false
+  currentArticle.value = null
+}
+
 // 导航到关注页面
 const goToSubscriptions = () => {
   router.push('/subscriptions')
-}
-
-// 关闭预览对话框
-const closePreviewDialog = () => {
-  currentArticle.value = null
-  previewDialogVisible.value = false
 }
 
 onMounted(() => {

@@ -215,24 +215,75 @@ const showArticlePreview = (article) => {
 
 const deleteArticle = async (article) => {
   try {
+    // 打印文章信息，用于调试
+    console.log('要删除的文章信息:', article);
+    
+    if (!article.title) {
+      ElMessage.error('文章标题不存在，无法删除');
+      return;
+    }
+    
     await ElMessageBox.confirm('确定要删除这篇文章吗？该操作不可恢复。', '删除确认', {
       confirmButtonText: '确定删除',
       cancelButtonText: '取消',
       type: 'warning'
-    })
+    });
     
-    loading.value = true
-    await axios.delete(`/api/articles/${article.articleId}`)
-    ElMessage.success('文章删除成功')
+    loading.value = true;
+    
+    // 添加发送请求时的token
+    const token = localStorage.getItem('token');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    
+    // 使用文章标题和作者名称作为删除依据
+    const authorUsername = localStorage.getItem('username');
+    console.log('发送删除请求，文章标题:', article.title, '作者:', authorUsername);
+    
+    // 发送删除请求
+    const response = await axios.delete(`/api/articles/delete-by-title`, { 
+      params: {
+        title: article.title,
+        authorUsername: authorUsername
+      },
+      headers: headers
+    });
+    
+    console.log('删除响应:', response);
+    
+    ElMessage.success('文章删除成功');
+    
     // 删除后重新获取文章列表
-    await fetchArticles()
+    await fetchArticles();
   } catch (error) {
-    if (error !== 'cancel') {
-      console.error('删除文章失败:', error)
-      ElMessage.error('删除文章失败')
+    // 如果是取消删除，不显示错误消息
+    if (error === 'cancel' || error.toString().includes('cancel')) {
+      console.log('用户取消了删除操作');
+      return;
     }
+    
+    console.error('删除文章失败:', error);
+    let errorMsg = '删除文章失败';
+    
+    if (error.response) {
+      // 服务器返回了错误状态码
+      if (error.response.status === 403) {
+        errorMsg = '没有权限删除此文章';
+      } else if (error.response.status === 404) {
+        errorMsg = '文章不存在或已被删除';
+      } else if (error.response.data && error.response.data.message) {
+        errorMsg = error.response.data.message;
+      }
+    } else if (error.request) {
+      // 请求发送但没有收到响应
+      errorMsg = '网络错误，无法连接到服务器';
+    } else {
+      // 请求设置时出现错误
+      errorMsg = error.message || '删除请求出错';
+    }
+    
+    ElMessage.error(errorMsg);
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 

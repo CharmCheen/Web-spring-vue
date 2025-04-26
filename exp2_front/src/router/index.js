@@ -95,6 +95,15 @@ const routes = [
     name: 'FollowedArticles',
     component: FollowedArticles,
     meta: { requiresAuth: false }
+  },
+  {
+    path: '/article-stats',
+    name: 'ArticleStats',
+    component: () => import('@/components/ArticleStats.vue'),
+    meta: {
+      requiresAuth: true,
+      title: '文章统计'
+    }
   }
 ];
 

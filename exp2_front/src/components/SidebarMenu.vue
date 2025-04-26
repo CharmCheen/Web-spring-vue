@@ -36,6 +36,9 @@
           <el-menu-item index="/articles/manage">
             <span>我的文章</span>
           </el-menu-item>
+          <el-menu-item index="/article-stats">
+            <span>文章统计</span>
+          </el-menu-item>
           <el-menu-item index="/subscriptions">
             <span>我的关注</span>
           </el-menu-item>

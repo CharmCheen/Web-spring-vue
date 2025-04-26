@@ -10,6 +10,7 @@
   "dependencies": {
     "@kangc/v-md-editor": "^2.3.18",
     "axios": "^1.8.4",
+    "chart.js": "^4.4.9",
     "core-js": "^3.8.3",
     "element-china-area-data": "^6.1.0",
     "element-plus": "^2.3.8",

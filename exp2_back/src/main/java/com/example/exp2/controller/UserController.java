@@ -80,8 +80,19 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户不存在");
             }
 
-            // 验证密码
-            if (!BCrypt.checkpw(password, user.getPassword())) {
+            // 日志：数据库密码内容
+            System.out.println("[登录] 用户名/邮箱: " + account + "，数据库密码: " + user.getPassword());
+
+            // 验证密码（数据库密码必须是BCrypt加密格式）
+            boolean match = false;
+            try {
+                match = org.springframework.security.crypto.bcrypt.BCrypt.checkpw(password, user.getPassword());
+            } catch (Exception e) {
+                // 兼容数据库中有明文密码的极端情况
+                System.out.println("[登录] BCrypt校验异常，尝试明文对比");
+                match = password.equals(user.getPassword());
+            }
+            if (!match) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("密码错误");
             }
 
@@ -93,6 +104,8 @@ public class UserController {
             userInfo.put("birthdate", user.getBirthdate());
             userInfo.put("address", user.getAddress());
             userInfo.put("postcode", user.getPostcode());
+            // 兼容前端token存储
+            userInfo.put("token", user.getUsername());
 
             return ResponseEntity.ok(userInfo);
         } catch (Exception e) {

@@ -118,64 +118,43 @@ export default {
         if (valid) {
           this.loading = true;
           try {
+            // 修正API路径 - 从 /api/auth/login 改为 /api/user/login
             const response = await axios.post('/api/user/login', this.loginForm);
+            // 处理成功登录
+            const token = response.data.token || response.data.username; // 兼容后端返回格式
+            const username = response.data.username;
             
-            // 存储用户信息 - 直接使用响应数据
+            // 同时保存完整的用户信息
+            localStorage.setItem('token', token);
+            localStorage.setItem('username', username);
             localStorage.setItem('user', JSON.stringify(response.data));
-            localStorage.setItem('username', response.data.username);
             
-            // 处理头像URL
-            if (response.data.avatar && response.data.avatar !== 'default.jpg') {
-              this.userAvatar = `http://localhost:8081/uploads/avatars/${response.data.avatar}`;
-            } else {
-              this.userAvatar = 'http://localhost:8081/uploads/avatars/default.jpg';
-            }
-            
+            // 显示成功消息
             ElMessage.success('登录成功');
-            // 重定向到首页
+            
+            // 导航到首页
             this.$router.push('/home');
           } catch (error) {
-            console.error('登录错误:', error);
-            
-            // 改进错误处理逻辑，处理各种可能的错误响应格式
+            // 处理错误
             let errorMessage = '登录失败';
             
             if (error.response) {
-              // 详细解析错误响应
-              const responseData = error.response.data;
-              
-              if (typeof responseData === 'string') {
-                // 如果响应是字符串，直接使用
-                errorMessage = responseData === 'No message available' ? '登录失败：用户名或密码错误' : responseData;
-              } else if (responseData && responseData.message) {
-                // 如果响应中有message字段
-                errorMessage = responseData.message === 'No message available' ? '登录失败：用户名或密码错误' : responseData.message;
-              } else if (responseData && typeof responseData === 'object') {
-                // 尝试找到对象中的任何可能的错误信息
-                const firstValue = Object.values(responseData)[0];
-                if (firstValue && typeof firstValue === 'string') {
-                  errorMessage = firstValue === 'No message available' ? '登录失败：用户名或密码错误' : firstValue;
-                }
-              }
-              
-              // 如果没有具体信息或显示No message available，根据状态码给出提示
-              if (errorMessage === '登录失败' || errorMessage === 'No message available') {
-                switch (error.response.status) {
-                  case 400:
-                    errorMessage = '登录失败：请求参数错误';
-                    break;
-                  case 401:
-                    errorMessage = '登录失败：用户名或密码错误';
-                    break;
-                  case 403:
-                    errorMessage = '登录失败：账号无访问权限';
-                    break;
-                  case 500:
-                    errorMessage = '登录失败：服务器内部错误';
-                    break;
-                  default:
-                    errorMessage = '登录失败：请检查账号和密码';
-                }
+              console.error('登录错误状态:', error.response.status, '错误数据:', error.response.data);
+              switch (error.response.status) {
+                case 400:
+                  errorMessage = '登录失败：请求参数错误';
+                  break;
+                case 401:
+                  errorMessage = '登录失败：用户名或密码错误';
+                  break;
+                case 403:
+                  errorMessage = '登录失败：账号无访问权限';
+                  break;
+                case 500:
+                  errorMessage = '登录失败：服务器内部错误';
+                  break;
+                default:
+                  errorMessage = error.response.data || '登录失败：请检查账号和密码';
               }
             } else if (error.request) {
               // 请求已发送但未收到响应

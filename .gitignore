@@ -1,0 +1,74 @@
+# 通用忽略文件
+.DS_Store
+*.log
+*.swp
+*~
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.project
+.settings/
+.classpath
+.env
+
+# 后端 (Java/Spring Boot) 忽略文件
+/exp2_back/build/
+/exp2_back/.gradle/
+/exp2_back/out/
+/exp2_back/target/
+/exp2_back/bin/
+/exp2_back/.settings/
+/exp2_back/.factorypath
+/exp2_back/src/main/resources/application-dev.properties
+/exp2_back/src/main/resources/application-prod.properties
+/exp2_back/*.hprof
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+
+# 前端 (Vue.js) 忽略文件
+/exp2_front/node_modules/
+/exp2_front/dist/
+/exp2_front/.env.local
+/exp2_front/.env.*.local
+/exp2_front/npm-debug.log*
+/exp2_front/yarn-debug.log*
+/exp2_front/yarn-error.log*
+/exp2_front/pnpm-debug.log*
+/exp2_front/coverage/
+/exp2_front/.nuxt
+/exp2_front/.vite
+/exp2_front/package-lock.json
+/exp2_front/yarn.lock
+
+# 上传的文件和临时文件
+/exp2_back/uploads/*
+!/exp2_back/uploads/avatars/
+/exp2_back/uploads/avatars/*
+!/exp2_back/uploads/avatars/default.jpg
+/tmp/
+/temp/
+
+# 数据库相关
+*.db
+*.sqlite
+/exp2_back/h2/
+*.h2.db
+*.lock.db
+*.trace.db
+*.mv.db
+
+# 测试相关
+/exp2_back/src/test/resources/application-test.properties
+/exp2_back/test-output/
+/exp2_front/tests/e2e/videos/
+/exp2_front/tests/e2e/screenshots/
+
+# 系统特定文件
+Thumbs.db
+desktop.ini
