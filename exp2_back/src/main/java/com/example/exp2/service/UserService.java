@@ -124,4 +124,37 @@ public class UserService {
         int updated = userMapper.updatePassword(username, hashedNewPassword);
         return updated > 0;
     }
+
+    /**
+     * 用户注销账号
+     * @param username 用户名
+     * @param password 密码（用于验证）
+     * @return 注销结果，true成功，false失败
+     */
+    public boolean deleteAccount(String username, String password) {
+        User user = userMapper.findByUsername(username);
+        if (user == null) {
+            return false;
+        }
+
+        // 验证密码是否正确
+        boolean isPasswordValid = false;
+        try {
+            isPasswordValid = BCrypt.checkpw(password, user.getPassword());
+        } catch (Exception e) {
+            // 兼容数据库中有明文密码的极端情况
+            isPasswordValid = password.equals(user.getPassword());
+        }
+
+        if (!isPasswordValid) {
+            return false;
+        }
+
+        // 删除用户相关的数据
+        // 1. 删除用户的文章（如果需要）
+        // 2. 删除用户的关注关系（如果需要）
+        // 3. 最后删除用户账号
+        int result = userMapper.deleteByUsername(username);
+        return result > 0;
+    }
 }

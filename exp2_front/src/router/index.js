@@ -3,6 +3,7 @@ import Login from '../pages/Login.vue';
 import Register from '../pages/Register.vue';
 import ForgotPassword from '../pages/ForgotPassword.vue';
 import ChangePassword from '../pages/ChangePassword.vue';
+import DeleteAccount from '../pages/DeleteAccount.vue';
 import Home from '../pages/Home.vue';
 import UserManagement from '../pages/UserManagement.vue';
 import FeatureUserManagement from '../pages/FeatureUserManagement.vue';
@@ -110,6 +111,12 @@ const routes = [
     path: '/change-password',
     name: 'ChangePassword',
     component: ChangePassword,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/delete-account',
+    name: 'DeleteAccount',
+    component: DeleteAccount,
     meta: { requiresAuth: true }
   }
 ];

@@ -262,4 +262,32 @@ public class UserController {
                     .body("密码修改失败: " + e.getMessage());
         }
     }
+
+    /**
+     * 注销用户账号
+     */
+    @PostMapping("/delete-account")
+    public ResponseEntity<?> deleteAccount(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String password = request.get("password");
+        
+        // 参数校验
+        if (username == null || username.trim().isEmpty() ||
+            password == null || password.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("用户名和密码不能为空");
+        }
+        
+        try {
+            boolean isSuccessful = userService.deleteAccount(username, password);
+            if (isSuccessful) {
+                return ResponseEntity.ok("账号已成功注销");
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户名或密码错误");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("账号注销失败: " + e.getMessage());
+        }
+    }
 }

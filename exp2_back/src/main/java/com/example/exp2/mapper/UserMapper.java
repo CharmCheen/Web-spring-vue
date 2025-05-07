@@ -42,4 +42,12 @@ public interface UserMapper {
      */
     @org.apache.ibatis.annotations.Update("UPDATE users SET password = #{newPassword} WHERE username = #{username}")
     int updatePassword(String username, String newPassword);
+
+    /**
+     * 通过用户名删除用户
+     * @param username 用户名
+     * @return 影响的行数
+     */
+    @org.apache.ibatis.annotations.Delete("DELETE FROM users WHERE username = #{username}")
+    int deleteByUsername(String username);
 }

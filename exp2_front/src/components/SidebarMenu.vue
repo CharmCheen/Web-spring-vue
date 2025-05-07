@@ -71,6 +71,10 @@
           <i class="el-icon-key"></i>
           <span>修改密码</span>
         </el-menu-item>
+        <el-menu-item index="/delete-account">
+          <i class="el-icon-delete"></i>
+          <span>注销账户</span>
+        </el-menu-item>
         <el-menu-item index="/" @click="logout">
           <i class="el-icon-switch-button"></i>
           <span>退出登录</span>
