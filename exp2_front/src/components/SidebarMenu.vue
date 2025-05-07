@@ -67,6 +67,10 @@
 
       <!-- 操作区域 -->
       <div class="sidebar-section">
+        <el-menu-item index="/change-password">
+          <i class="el-icon-key"></i>
+          <span>修改密码</span>
+        </el-menu-item>
         <el-menu-item index="/" @click="logout">
           <i class="el-icon-switch-button"></i>
           <span>退出登录</span>

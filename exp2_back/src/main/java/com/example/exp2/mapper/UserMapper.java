@@ -33,4 +33,13 @@ public interface UserMapper {
      * 注：这里需要使用MyBatis的动态SQL功能，通过XML配置实现
      */
     List<User> findUsersByUsernames(List<String> usernames);  // 根据多个用户名查询用户
+
+    /**
+     * 仅更新用户密码
+     * @param username 用户名
+     * @param newPassword 新密码
+     * @return 影响的行数
+     */
+    @org.apache.ibatis.annotations.Update("UPDATE users SET password = #{newPassword} WHERE username = #{username}")
+    int updatePassword(String username, String newPassword);
 }

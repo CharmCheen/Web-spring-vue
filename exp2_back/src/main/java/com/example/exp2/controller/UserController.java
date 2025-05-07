@@ -227,4 +227,39 @@ public class UserController {
             return ResponseEntity.status(500).body("获取用户信息失败: " + e.getMessage());
         }
     }
+
+    /**
+     * 修改用户密码
+     */
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, String> request) {
+        String username = request.get("username");
+        String oldPassword = request.get("oldPassword");
+        String newPassword = request.get("newPassword");
+        
+        // 参数校验
+        if (username == null || username.trim().isEmpty() ||
+            oldPassword == null || oldPassword.trim().isEmpty() ||
+            newPassword == null || newPassword.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("用户名、旧密码和新密码不能为空");
+        }
+        
+        // 新旧密码不能相同
+        if (oldPassword.equals(newPassword)) {
+            return ResponseEntity.badRequest().body("新密码不能与旧密码相同");
+        }
+        
+        try {
+            boolean isSuccessful = userService.changePassword(username, oldPassword, newPassword);
+            if (isSuccessful) {
+                return ResponseEntity.ok("密码修改成功");
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("用户名或旧密码错误");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("密码修改失败: " + e.getMessage());
+        }
+    }
 }

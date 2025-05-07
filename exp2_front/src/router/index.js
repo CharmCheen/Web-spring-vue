@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 import Login from '../pages/Login.vue';
 import Register from '../pages/Register.vue';
 import ForgotPassword from '../pages/ForgotPassword.vue';
+import ChangePassword from '../pages/ChangePassword.vue';
 import Home from '../pages/Home.vue';
 import UserManagement from '../pages/UserManagement.vue';
 import FeatureUserManagement from '../pages/FeatureUserManagement.vue';
@@ -104,6 +105,12 @@ const routes = [
       requiresAuth: true,
       title: '文章统计'
     }
+  },
+  {
+    path: '/change-password',
+    name: 'ChangePassword',
+    component: ChangePassword,
+    meta: { requiresAuth: true }
   }
 ];
 

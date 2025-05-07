@@ -4,6 +4,7 @@ import com.example.exp2.entity.User;
 import com.example.exp2.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -88,5 +89,39 @@ public class UserService {
             return new ArrayList<>();
         }
         return userMapper.findUsersByUsernames(usernames);
+    }
+
+    /**
+     * 修改用户密码
+     * @param username 用户名
+     * @param oldPassword 旧密码
+     * @param newPassword 新密码
+     * @return 修改结果，true成功，false失败
+     */
+    public boolean changePassword(String username, String oldPassword, String newPassword) {
+        User user = userMapper.findByUsername(username);
+        if (user == null) {
+            return false;
+        }
+
+        // 验证旧密码是否正确
+        boolean isPasswordValid = false;
+        try {
+            isPasswordValid = BCrypt.checkpw(oldPassword, user.getPassword());
+        } catch (Exception e) {
+            // 兼容数据库中有明文密码的极端情况
+            isPasswordValid = oldPassword.equals(user.getPassword());
+        }
+
+        if (!isPasswordValid) {
+            return false;
+        }
+
+        // 加密新密码
+        String hashedNewPassword = BCrypt.hashpw(newPassword, BCrypt.gensalt());
+        
+        // 直接通过用户名更新密码，而不是使用User对象
+        int updated = userMapper.updatePassword(username, hashedNewPassword);
+        return updated > 0;
     }
 }
